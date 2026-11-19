@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Property Discovery</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <header class="masthead">
+      <p class="eyebrow">Saudi property catalog</p>
+      <h1>Property discovery,<br>with sources.</h1>
+      <p class="intro">Explore the initial DarGlobal and Wasalt collection. Every result links back to its public source.</p>
+    </header>
+    <main>
+      <section class="question-panel" aria-labelledby="assistant-title">
+        <div>
+          <p class="eyebrow">Ask the catalog</p>
+          <h2 id="assistant-title">What are you looking for?</h2>
+        </div>
+        <form id="chat-form">
+          <label class="sr-only" for="question">Property question</label>
+          <textarea id="question" name="question" rows="2" maxlength="600" placeholder="e.g. Tell me about villas in Riyadh under SAR 4M"></textarea>
+          <button type="submit">Ask</button>
+        </form>
+        <div id="answer" class="answer" aria-live="polite" hidden></div>
+      </section>
+
+      <section class="catalog" aria-labelledby="catalog-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Search the catalog</p>
+            <h2 id="catalog-title">Available records</h2>
+          </div>
+          <p id="result-count" aria-live="polite"></p>
+        </div>
+        <form id="filters" class="filters">
+          <label>Source<select name="source"><option value="">All sources</option><option value="darglobal">DarGlobal</option><option value="wasalt">Wasalt</option></select></label>
+          <label>Property type<select name="propertyType"><option value="">All types</option><option value="villa">Villa</option><option value="land">Land</option><option value="floor">Floor</option><option value="residence">Residence</option><option value="mansion">Mansion</option></select></label>
+          <label>Minimum bedrooms<select name="minBedrooms"><option value="">Any</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option><option value="5">5+</option></select></label>
+          <label>Maximum price (SAR)<input name="maxPrice" inputmode="numeric" pattern="[0-9]*" placeholder="4,000,000"></label>
+          <button type="submit" class="secondary">Apply filters</button>
+        </form>
+        <div id="results" class="results" aria-live="polite" aria-busy="true"></div>
+      </section>
+    </main>
+    <footer>Initial 20-record demo catalog. Prices and availability may have changed since collection.</footer>
+    <script type="module" src="/static/app.js"></script>
+  </body>
+</html>
