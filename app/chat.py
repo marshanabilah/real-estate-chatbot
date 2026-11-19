@@ -6,20 +6,53 @@ import httpx
 
 
 STOP_WORDS = {"about", "and", "for", "from", "have", "in", "is", "me", "of", "show", "tell", "the", "to", "what", "with"}
+PROPERTY_TYPES = {"floor", "land", "mansion", "residence", "villa"}
 
 
 def _tokens(text: str) -> set[str]:
     return {
-        token
+        token.rstrip("s")
         for token in re.findall(r"[a-z0-9]+", text.lower())
         if len(token) > 1 and token not in STOP_WORDS
     }
 
 
+def _query_constraints(question: str) -> dict[str, object]:
+    tokens = _tokens(question)
+    property_type = next((item for item in PROPERTY_TYPES if item in tokens), None)
+    bedrooms = re.search(r"(?:at least|minimum|min)\s+(\d+)\s+bedrooms?", question, re.IGNORECASE)
+    price = re.search(
+        r"(?:under|below|less than|maximum|max)\s+(?:sar\s*)?(\d+(?:\.\d+)?)\s*(million|m|thousand|k)?",
+        question,
+        re.IGNORECASE,
+    )
+    max_price = None
+    if price:
+        amount = float(price.group(1))
+        multiplier = {"million": 1_000_000, "m": 1_000_000, "thousand": 1_000, "k": 1_000}.get(
+            (price.group(2) or "").lower(), 1
+        )
+        max_price = int(amount * multiplier)
+    return {
+        "property_type": property_type,
+        "min_bedrooms": int(bedrooms.group(1)) if bedrooms else None,
+        "max_price": max_price,
+    }
+
+
 def retrieve(question: str, records: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     query_tokens = _tokens(question)
+    constraints = _query_constraints(question)
     ranked: list[tuple[int, dict[str, Any]]] = []
     for record in records:
+        if constraints["property_type"] and record.get("property_type") != constraints["property_type"]:
+            continue
+        if constraints["min_bedrooms"] is not None and (record.get("bedrooms") or 0) < constraints["min_bedrooms"]:
+            continue
+        if constraints["max_price"] is not None and (
+            record.get("price") is None or record["price"] > constraints["max_price"]
+        ):
+            continue
         title_tokens = _tokens(record.get("title") or "")
         metadata = " ".join(
             str(record.get(field) or "")

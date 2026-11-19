@@ -18,6 +18,18 @@ class ChatAnswerTests(unittest.TestCase):
         self.assertTrue(response["sources"][0]["source_url"].startswith("https://"))
         self.assertEqual(len(response["sources"]), 1)
 
+    def test_applies_property_bedroom_and_price_constraints_from_question(self):
+        response = answer_question(
+            "Show me villas in Riyadh with at least 4 bedrooms under SAR 4 million",
+            load_records(),
+            api_key=None,
+        )
+
+        self.assertEqual(len(response["sources"]), 3)
+        self.assertTrue(all(source["source"] == "wasalt" for source in response["sources"]))
+        self.assertIn("Villa 210 SQM", response["answer"])
+        self.assertNotIn("Floor with 4 Bedrooms", response["answer"])
+
 
 if __name__ == "__main__":
     unittest.main()
