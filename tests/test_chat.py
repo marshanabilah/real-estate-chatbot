@@ -36,6 +36,17 @@ class ChatAnswerTests(unittest.TestCase):
         self.assertTrue(all(item["property_type"] == "villa" for item in response["matches"]))
         self.assertTrue(all(item["price"] <= 4_000_000 for item in response["matches"]))
 
+    def test_does_not_return_riyadh_cards_for_a_listing_request_outside_riyadh(self):
+        response = answer_question(
+            "Do you have any listing that reside not in Riyadh?",
+            load_records(),
+            api_key=None,
+        )
+
+        self.assertEqual(response["matches"], [])
+        self.assertEqual(response["sources"], [])
+        self.assertIn("could not find", response["answer"].lower())
+
 
 if __name__ == "__main__":
     unittest.main()

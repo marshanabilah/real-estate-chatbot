@@ -7,6 +7,7 @@ import httpx
 
 STOP_WORDS = {"about", "and", "for", "from", "have", "in", "is", "me", "of", "show", "tell", "the", "to", "what", "with"}
 PROPERTY_TYPES = {"floor", "land", "mansion", "residence", "villa"}
+RECORD_TYPES = {"listing", "project"}
 CARD_FIELDS = (
     "title",
     "source",
@@ -34,6 +35,8 @@ def _tokens(text: str) -> set[str]:
 def _query_constraints(question: str) -> dict[str, object]:
     tokens = _tokens(question)
     property_type = next((item for item in PROPERTY_TYPES if item in tokens), None)
+    record_type = next((item for item in RECORD_TYPES if item in tokens), None)
+    excluded_city = re.search(r"\b(?:not\s+in|outside(?:\s+of)?)\s+([a-z]+)", question, re.IGNORECASE)
     bedrooms = re.search(r"(?:at least|minimum|min)\s+(\d+)\s+bedrooms?", question, re.IGNORECASE)
     price = re.search(
         r"(?:under|below|less than|maximum|max)\s+(?:sar\s*)?(\d+(?:\.\d+)?)\s*(million|m|thousand|k)?",
@@ -49,6 +52,8 @@ def _query_constraints(question: str) -> dict[str, object]:
         max_price = int(amount * multiplier)
     return {
         "property_type": property_type,
+        "record_type": record_type,
+        "excluded_city": excluded_city.group(1).lower() if excluded_city else None,
         "min_bedrooms": int(bedrooms.group(1)) if bedrooms else None,
         "max_price": max_price,
     }
@@ -57,9 +62,14 @@ def _query_constraints(question: str) -> dict[str, object]:
 def retrieve(question: str, records: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     query_tokens = _tokens(question)
     constraints = _query_constraints(question)
+    has_constraints = any(value is not None for value in constraints.values())
     ranked: list[tuple[int, dict[str, Any]]] = []
     for record in records:
         if constraints["property_type"] and record.get("property_type") != constraints["property_type"]:
+            continue
+        if constraints["record_type"] and record.get("record_type") != constraints["record_type"]:
+            continue
+        if constraints["excluded_city"] and (record.get("city") or "").lower() == constraints["excluded_city"]:
             continue
         if constraints["min_bedrooms"] is not None and (record.get("bedrooms") or 0) < constraints["min_bedrooms"]:
             continue
@@ -73,7 +83,7 @@ def retrieve(question: str, records: Iterable[dict[str, Any]]) -> list[dict[str,
             for field in ("city", "district", "property_type", "developer", "description")
         )
         score = (5 * len(query_tokens & title_tokens)) + len(query_tokens & _tokens(metadata))
-        if score:
+        if score or has_constraints:
             ranked.append((score, record))
     if not ranked:
         return []
