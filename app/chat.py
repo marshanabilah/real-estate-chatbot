@@ -7,6 +7,20 @@ import httpx
 
 STOP_WORDS = {"about", "and", "for", "from", "have", "in", "is", "me", "of", "show", "tell", "the", "to", "what", "with"}
 PROPERTY_TYPES = {"floor", "land", "mansion", "residence", "villa"}
+CARD_FIELDS = (
+    "title",
+    "source",
+    "source_url",
+    "record_type",
+    "country",
+    "city",
+    "district",
+    "property_type",
+    "bedrooms",
+    "area_sqm",
+    "price",
+    "currency",
+)
 
 
 def _tokens(text: str) -> set[str]:
@@ -82,6 +96,10 @@ def _fallback_answer(matches: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def _card_match(record: dict[str, Any]) -> dict[str, Any]:
+    return {field: record.get(field) for field in CARD_FIELDS}
+
+
 def _model_answer(question: str, matches: list[dict[str, Any]], api_key: str) -> Optional[str]:
     context = [
         {
@@ -137,5 +155,6 @@ def answer_question(
             {"title": record["title"], "source": record["source"], "source_url": record["source_url"]}
             for record in matches
         ],
+        "matches": [_card_match(record) for record in matches],
         "disclaimer": "Prices and availability may have changed since the catalog was collected.",
     }

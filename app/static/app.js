@@ -19,8 +19,8 @@ function sourceLink(record) {
   return link;
 }
 
-function card(record) {
-  const article = node('article', null, 'card');
+function card(record, className = '') {
+  const article = node('article', null, `card ${className}`.trim());
   const top = node('div', null, 'card-top');
   top.append(node('span', record.source, 'source'), node('span', record.record_type));
   const place = [record.district, record.city, record.country].filter(Boolean).join(', ');
@@ -81,7 +81,19 @@ document.querySelector('#chat-form').addEventListener('submit', async event => {
     }
     const responseText = node('div', null, 'answer-text');
     appendFormattedText(responseText, payload.answer);
-    answer.replaceChildren(responseText, sources, node('p', payload.disclaimer, 'fineprint'));
+    const children = [responseText];
+    if (payload.matches?.length) {
+      const matches = node('section', null, 'answer-matches');
+      matches.append(node('h3', 'Matching properties'));
+      const cards = node('div', null, 'answer-cards');
+      cards.append(...payload.matches.map(record => card(record, 'answer-card')));
+      matches.append(cards);
+      children.push(matches);
+    } else {
+      children.push(sources);
+    }
+    children.push(node('p', payload.disclaimer, 'fineprint'));
+    answer.replaceChildren(...children);
   } catch {
     answer.textContent = 'The assistant could not answer right now. Please try again.';
   }

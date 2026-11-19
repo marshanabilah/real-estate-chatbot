@@ -17,6 +17,10 @@ class ChatAnswerTests(unittest.TestCase):
         self.assertEqual(response["sources"][0]["title"], "Neptune, Interiors by Mouawad")
         self.assertTrue(response["sources"][0]["source_url"].startswith("https://"))
         self.assertEqual(len(response["sources"]), 1)
+        self.assertEqual(len(response["matches"]), 1)
+        self.assertEqual(response["matches"][0]["title"], "Neptune, Interiors by Mouawad")
+        self.assertEqual(response["matches"][0]["property_type"], "villa")
+        self.assertNotIn("description", response["matches"][0])
 
     def test_applies_property_bedroom_and_price_constraints_from_question(self):
         response = answer_question(
@@ -29,6 +33,8 @@ class ChatAnswerTests(unittest.TestCase):
         self.assertTrue(all(source["source"] == "wasalt" for source in response["sources"]))
         self.assertIn("Villa 210 SQM", response["answer"])
         self.assertNotIn("Floor with 4 Bedrooms", response["answer"])
+        self.assertTrue(all(item["property_type"] == "villa" for item in response["matches"]))
+        self.assertTrue(all(item["price"] <= 4_000_000 for item in response["matches"]))
 
 
 if __name__ == "__main__":

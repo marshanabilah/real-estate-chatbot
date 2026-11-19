@@ -50,6 +50,8 @@ class PropertyApiTests(unittest.TestCase):
         self.assertEqual(payload["mode"], "retrieval")
         self.assertIn("Neptune", payload["answer"])
         self.assertEqual(payload["sources"][0]["source"], "darglobal")
+        self.assertEqual(payload["matches"][0]["title"], "Neptune, Interiors by Mouawad")
+        self.assertNotIn("description", payload["matches"][0])
 
 
 if __name__ == "__main__":
