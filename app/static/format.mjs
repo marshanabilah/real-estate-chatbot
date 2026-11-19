@@ -11,21 +11,54 @@ export function formatSegments(text) {
   return segments;
 }
 
-function appendTextWithBreaks(container, text) {
-  text.split('\n').forEach((line, index) => {
-    if (index) container.append(document.createElement('br'));
-    container.append(document.createTextNode(line));
-  });
+export function formatBlocks(text) {
+  const blocks = [];
+  let items = [];
+  const flushList = () => {
+    if (items.length) blocks.push({ type: 'list', items });
+    items = [];
+  };
+  for (const line of text.split('\n')) {
+    const bullet = /^[-*]\s+(.+)$/.exec(line.trim());
+    if (bullet) {
+      items.push(bullet[1]);
+    } else if (line.trim()) {
+      flushList();
+      blocks.push({ type: 'paragraph', value: line.trim() });
+    } else {
+      flushList();
+    }
+  }
+  flushList();
+  return blocks;
 }
 
-export function appendFormattedText(container, text) {
+function appendInlineText(container, text) {
   formatSegments(text).forEach(segment => {
     if (segment.type === 'strong') {
       const strong = document.createElement('strong');
       strong.textContent = segment.value;
       container.append(strong);
     } else {
-      appendTextWithBreaks(container, segment.value);
+      container.append(document.createTextNode(segment.value));
+    }
+  });
+}
+
+export function appendFormattedText(container, text) {
+  formatBlocks(text).forEach(block => {
+    if (block.type === 'list') {
+      const list = document.createElement('ul');
+      block.items.forEach(item => {
+        const listItem = document.createElement('li');
+        appendInlineText(listItem, item);
+        list.append(listItem);
+      });
+      container.append(list);
+    } else {
+      const paragraph = document.createElement('p');
+      appendInlineText(paragraph, block.value);
+      container.append(paragraph);
     }
   });
 }

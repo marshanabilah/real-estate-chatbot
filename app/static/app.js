@@ -79,7 +79,7 @@ document.querySelector('#chat-form').addEventListener('submit', async event => {
     } else {
       sources.append(document.createTextNode('No matching record'));
     }
-    const responseText = node('p');
+    const responseText = node('div', null, 'answer-text');
     appendFormattedText(responseText, payload.answer);
     answer.replaceChildren(responseText, sources, node('p', payload.disclaimer, 'fineprint'));
   } catch {

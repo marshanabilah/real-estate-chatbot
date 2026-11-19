@@ -103,7 +103,9 @@ def _model_answer(question: str, matches: list[dict[str, Any]], api_key: str) ->
             "role": "system",
             "content": (
                 "Answer only from the supplied property catalog. Do not invent availability, "
-                "features, prices, or investment advice. Be concise and state when data is unavailable."
+                "features, prices, or investment advice. Be concise and state when data is unavailable. "
+                "Never use Markdown tables, pipe characters, HTML, or a Sources section. For multiple "
+                "properties, use a short introduction followed by one Markdown bullet per property."
             ),
         },
         {"role": "user", "content": f"Question: {question}\nCatalog: {context}"},
